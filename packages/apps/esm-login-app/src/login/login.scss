@@ -12,13 +12,13 @@
 }
 
 .logo {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   height: 5rem;
   width: 16rem;
 }
 
 .logo-img {
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
   max-width: 100%;
 }
 
@@ -53,8 +53,10 @@
   border: 1px solid $ui-03;
   background-color: $ui-02;
   width: 23rem;
+  min-height: 2.5rem;
   padding: 2.5rem;
   position: relative;
+  min-height: 32.5rem;
 }
 
 @media only screen and (min-width: 481px) {
@@ -70,7 +72,24 @@
   }
 
   .container {
-    height: 100vh;
+    height: 200vh;
+  }
+}
+
+.selectContainer {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  width: 18rem;
+
+  :global(.cds--text-input) {
+    height: 3rem;
+    @extend .label01;
+  }
+
+  :global(.cds--text-input__field-outer-wrapper) {
+    width: 18rem;
   }
 }
 
@@ -118,5 +137,5 @@
 }
 
 .footer {
-  margin-top: 6.75rem;
+  margin-top: 1.75rem;
 }

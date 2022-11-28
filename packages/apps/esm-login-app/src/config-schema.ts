@@ -1,4 +1,5 @@
 import { validators, Type } from "@openmrs/esm-framework";
+import ugandaEmrLogo from "./images/ugandaemr_logo.png";
 
 export const configSchema = {
   provider: {
@@ -60,14 +61,14 @@ export const configSchema = {
   logo: {
     src: {
       _type: Type.String,
-      _default: null,
+      _default: ugandaEmrLogo,
       _description:
         "A path or URL to an image. If null, will use the OpenMRS SVG sprite.",
       _validators: [validators.isUrl],
     },
     alt: {
       _type: Type.String,
-      _default: "Logo",
+      _default: "Custom logos",
       _description: "Alt text, shown on hover",
     },
   },

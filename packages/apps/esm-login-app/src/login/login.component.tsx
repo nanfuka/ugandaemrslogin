@@ -6,10 +6,19 @@ import {
   PasswordInput,
   TextInput,
   Tile,
+  Layer,
+  Select,
+  SelectItem,
 } from "@carbon/react";
 import { ArrowLeft, ArrowRight } from "@carbon/react/icons";
 import { useTranslation } from "react-i18next";
-import { useConfig, interpolateUrl, useSession } from "@openmrs/esm-framework";
+import {
+  useConfig,
+  interpolateUrl,
+  useSession,
+  useLayoutType,
+  openmrsFetch,
+} from "@openmrs/esm-framework";
 import { performLogin } from "./login.resource";
 import styles from "./login.scss";
 
@@ -41,10 +50,58 @@ const Login: React.FC<LoginProps> = ({ isLoginEnabled }) => {
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const showPassword = location.pathname === "/login/confirm";
+  const [userLocation, setUserLocation] = useState("");
+  const isTablet = useLayoutType() === "tablet";
+
+  function perf(username, password) {
+    var token = window.btoa("".concat(username, ":").concat(password));
+    return openmrsFetch("/ws/fhir2/R4/Location", {
+      headers: {
+        Authorization: "Basic ".concat(token),
+      },
+    }).then(function (res) {
+      return res;
+    });
+  }
+  const [locations, setlocations] = useState([]);
+  useEffect(() => {
+    async function per() {
+      const lo = await perf("admin", "Admin123");
+      setlocations(lo.data.entry);
+    }
+    per();
+  });
+
+  console.log("fff", locations);
+
+  const locationSelect = (
+    <Select
+      className={styles["input-group"]}
+      id="location"
+      invalidText="Required"
+      labelText={t("selectLocation", "Select a location")}
+      onChange={(event) => setUserLocation(event.target.value)}
+      value={userLocation}
+    >
+      {!userLocation ? (
+        <SelectItem text={t("chooseLocation", "Choose a location")} value="" />
+      ) : null}
+      {locations?.length > 0 &&
+        locations.map((location) => (
+          <SelectItem
+            key={location.resource.id}
+            text={location.resource.description}
+            value={location.resource.id}
+          >
+            {location.display}
+          </SelectItem>
+        ))}
+    </Select>
+  );
 
   useEffect(() => {
-    if (user) {
-      navigate("/login/location", { state: location.state });
+    if (user && userLocation) {
+      navigate("/dashboard/home", { state: location.state });
     } else if (!username && location.pathname === "/login/confirm") {
       navigate("/login", { state: location.state });
     }
@@ -96,11 +153,6 @@ const Login: React.FC<LoginProps> = ({ isLoginEnabled }) => {
     async (evt: React.FormEvent<HTMLFormElement>) => {
       evt.preventDefault();
       evt.stopPropagation();
-
-      if (!showPassword) {
-        continueLogin();
-        return false;
-      }
 
       try {
         const loginRes = await performLogin(username, password);
@@ -171,79 +223,54 @@ const Login: React.FC<LoginProps> = ({ isLoginEnabled }) => {
           ) : null}
           <div className={styles["center"]}>{logo}</div>
           <form onSubmit={handleSubmit} ref={formRef}>
-            {!showPassword && (
-              <div className={styles["input-group"]}>
-                <TextInput
-                  id="username"
-                  type="text"
-                  name="username"
-                  labelText={t("username", "Username")}
-                  value={username}
-                  onChange={changeUsername}
-                  ref={usernameInputRef}
-                  autoFocus
-                  required
-                />
-                <input
-                  id="password"
-                  style={hidden}
-                  type="password"
-                  name="password"
-                  value={password}
-                  onChange={changePassword}
-                />
-                <Button
-                  className={styles.continueButton}
-                  renderIcon={(props) => <ArrowRight size={24} {...props} />}
-                  type="submit"
-                  iconDescription="Continue to login"
-                  onClick={continueLogin}
-                  disabled={!isLoginEnabled}
-                >
-                  {t("continue", "Continue")}
-                </Button>
-              </div>
-            )}
-            {showPassword && (
-              <div className={styles["input-group"]}>
-                <input
-                  id="username"
-                  type="text"
-                  name="username"
-                  style={hidden}
-                  value={username}
-                  onChange={changeUsername}
-                  required
-                />
+            {/* {!showPassword && ( */}
+            <div className={styles["input-group"]}>
+              <TextInput
+                id="username"
+                type="text"
+                name="username"
+                labelText={t("username", "Username")}
+                value={username}
+                onChange={changeUsername}
+                ref={usernameInputRef}
+                autoFocus
+                required
+              />
+            </div>
+            <div className={styles["input-group"]}>
+              <PasswordInput
+                id="password"
+                invalidText={t(
+                  "validValueRequired",
+                  "A valid value is required"
+                )}
+                labelText={t("password", "Password")}
+                name="password"
+                value={password}
+                onChange={changePassword}
+                ref={passwordInputRef}
+                required
+                showPasswordLabel="Show password"
+              />
 
-                <PasswordInput
-                  id="password"
-                  invalidText={t(
-                    "validValueRequired",
-                    "A valid value is required"
-                  )}
-                  labelText={t("password", "Password")}
-                  name="password"
-                  value={password}
-                  onChange={changePassword}
-                  ref={passwordInputRef}
-                  required
-                  showPasswordLabel="Show password"
-                />
-
-                <Button
-                  type="submit"
-                  className={styles.continueButton}
-                  renderIcon={(props) => <ArrowRight size={24} {...props} />}
-                  iconDescription="Log in"
-                  disabled={!isLoginEnabled}
-                >
-                  {t("login", "Log in")}
-                </Button>
+              <div>
+                {isTablet ? <Layer>{locationSelect}</Layer> : locationSelect}
               </div>
-            )}
+
+              <Button
+                type="submit"
+                className={styles.continueButton}
+                renderIcon={(props) => <ArrowRight size={24} {...props} />}
+                iconDescription="Log in"
+                disabled={!isLoginEnabled}
+              >
+                {t("login", "Log in")}
+              </Button>
+            </div>
+            {/* )} */}
           </form>
         </Tile>
+
         <div className={styles["need-help"]}>
           <p className={styles["need-help-txt"]}>
             {t("needHelp", "Need help?")}
