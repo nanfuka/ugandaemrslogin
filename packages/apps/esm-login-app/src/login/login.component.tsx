@@ -72,8 +72,6 @@ const Login: React.FC<LoginProps> = ({ isLoginEnabled }) => {
     per();
   });
 
-  console.log("fff", locations);
-
   const locationSelect = (
     <Select
       className={styles["input-group"]}
